@@ -127,7 +127,8 @@ export default function Home() {
       try {
         const response = await fetch('/api/products');
         const data = await response.json();
-        setProducts(data.products);
+        // FIX: Ensure setProducts always receives an array
+        setProducts(data.products || []);
       } catch (error) {
         toast({
           title: 'Erro',
@@ -656,7 +657,8 @@ export default function Home() {
     }
 
     try {
-      let deliveryAddress = null;
+      // FIX: Explicitly type deliveryAddress
+      let deliveryAddress: Address | null = null;
       let calculatedDeliveryFee = 0;
 
       if (deliveryType === 'DELIVERY') {
@@ -713,8 +715,9 @@ export default function Home() {
       });
     }
   };
-
-  const groupedProducts = products.reduce((acc, product) => {
+  
+  // FIX: Ensure products is an array before calling reduce
+  const groupedProducts = (products || []).reduce((acc, product) => {
     if (!acc[product.category]) {
       acc[product.category] = [];
     }
