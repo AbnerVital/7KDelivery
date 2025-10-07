@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(cuid())
+  name            String
+  whatsappNumber  String   @unique
+  addresses       Address[]
+  orders          Order[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Address {
+  id          String   @id @default(cuid())
+  street      String
+  number      String
+  neighborhood String
+  city        String
+  zipCode     String
+  lat         Float
+  lng         Float
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  googleId  String   @unique
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  category    String
+  imageUrl    String?
+  available   Boolean      @default(true)
+  orderItems  OrderItem[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+  status          OrderStatus @default(PENDING)
+  totalAmount     Float
+  deliveryFee     Float
+  deliveryType    DeliveryType @default(DELIVERY)
+  deliveryAddress Json?
+  paymentMethod   String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id           String   @id @default(cuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id])
+  quantity     Int
+  price        Float
+  customizations Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Settings {
+  id               String   @id @default(cuid())
+  minimumOrder     Float
+  workingHours     Json
+  whatsappNumber   String
+  phone            String?
+  email            String?
+  
+  // Store location for delivery calculations
+  storeAddress     String?
+  storeLat         Float?
+  storeLng         Float?
+  
+  // Delivery fee calculation - simplified to per KM only
+  deliveryFeePerKm Float    @default(5.0) // R$ per kilometer
+  minimumDeliveryFee Float?  @default(0.0) // Minimum delivery fee
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERING
+  DELIVERED
+  CANCELLED
+}
+
+enum DeliveryType {
+  DELIVERY
+  PICKUP
+}
