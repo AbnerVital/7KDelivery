@@ -397,11 +397,11 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Pizza className="h-8 w-8 text-red-600 mr-2" />
-              <h1 className="text-2xl font-bold text-gray-900">Painel Administrativo</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Painel Administrativo</h1>
             </div>
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
+            <Button variant="outline" onClick={handleLogout} className="h-11 w-auto px-3 sm:px-4">
+              <LogOut className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Sair</span>
             </Button>
           </div>
         </div>
@@ -410,7 +410,7 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total de Pedidos</CardTitle>
@@ -466,7 +466,7 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="orders" className="space-y-4">
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="orders">Pedidos</TabsTrigger>
             <TabsTrigger value="products">Cardápio</TabsTrigger>
             <TabsTrigger value="settings">Configurações</TabsTrigger>
@@ -480,7 +480,7 @@ export default function AdminDashboard() {
                   Acompanhe e gerencie todos os pedidos em tempo real
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -556,20 +556,20 @@ export default function AdminDashboard() {
           <TabsContent value="products">
             <Card>
               <CardHeader>
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
                     <CardTitle>Gerenciamento de Cardápio</CardTitle>
                     <CardDescription>
                       Adicione, edite e remova produtos do cardápio
                     </CardDescription>
                   </div>
-                  <Button onClick={() => setIsAddProductOpen(true)}>
+                  <Button onClick={() => setIsAddProductOpen(true)} className="h-11 w-full sm:w-auto">
                     <Plus className="h-4 w-4 mr-2" />
                     Adicionar Produto
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -604,13 +604,14 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" className="h-9 w-9">
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="destructive"
                               size="sm"
                               onClick={() => deleteProduct(product.id)}
+                              className="h-9 w-9"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -677,7 +678,7 @@ export default function AdminDashboard() {
                       placeholder="https://exemplo.com/imagem.jpg"
                     />
                   </div>
-                  <Button onClick={addProduct} className="w-full">
+                  <Button onClick={addProduct} className="w-full h-11">
                     Adicionar Produto
                   </Button>
                 </div>
@@ -877,7 +878,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    <Button onClick={() => {
+                    <Button className="h-11" onClick={() => {
                       fetch('/api/settings', {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },

@@ -204,13 +204,13 @@ export default function OrdersPage() {
             <div className="flex items-center">
               <Link href="/" className="flex items-center">
                 <Pizza className="h-8 w-8 text-red-600 mr-2" />
-                <h1 className="text-2xl font-bold text-gray-900">7KDelivery</h1>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">7KDelivery</h1>
               </Link>
             </div>
             <Link href="/">
-              <Button variant="outline">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar
+              <Button variant="outline" className="h-11 w-auto px-4">
+                <ArrowLeft className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Voltar</span>
               </Button>
             </Link>
           </div>
@@ -227,7 +227,7 @@ export default function OrdersPage() {
                 <CardTitle>Meus Pedidos</CardTitle>
                 <CardDescription>Selecione um pedido para ver os detalhes</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 max-h-96 overflow-y-auto">
+              <CardContent className="space-y-4 max-h-[50vh] lg:max-h-96 overflow-y-auto">
                 {orders.map((order) => (
                   <div
                     key={order.id}
@@ -277,26 +277,26 @@ export default function OrdersPage() {
                         value={getStatusProgress(selectedOrder.status)} 
                         className="h-2"
                       />
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
                         {statusSteps.map((step, index) => {
                           const isActive = statusSteps.findIndex(s => s.key === selectedOrder.status) >= index;
                           const Icon = step.icon;
                           return (
                             <div
                               key={step.key}
-                              className={`flex flex-col items-center p-3 rounded-lg border ${
+                              className={`flex flex-col items-center p-2 md:p-3 rounded-lg border ${
                                 isActive ? 'border-green-500 bg-green-50' : 'border-gray-200'
                               }`}
                             >
                               <Icon className={`h-6 w-6 mb-2 ${
                                 isActive ? 'text-green-600' : 'text-gray-400'
                               }`} />
-                              <p className={`text-sm font-medium ${
+                              <p className={`text-sm font-medium text-center ${
                                 isActive ? 'text-green-600' : 'text-gray-500'
                               }`}>
                                 {step.label}
                               </p>
-                              <p className="text-xs text-gray-500 text-center mt-1">
+                              <p className="text-xs text-gray-500 text-center mt-1 hidden sm:block">
                                 {step.description}
                               </p>
                             </div>

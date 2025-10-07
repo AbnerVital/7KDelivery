@@ -12,9 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Pizza, ShoppingCart, User, MapPin, Clock, Phone, Navigation, Search, Loader2 } from 'lucide-react';
+import { Pizza, ShoppingCart, User, MapPin, Clock, Phone, Navigation, Search, Loader2, Menu } from 'lucide-react';
 import GoogleMapsAutocomplete from '@/components/ui/google-maps-autocomplete';
 import Map from '@/components/ui/map';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 interface Product {
   id: string;
@@ -737,10 +738,11 @@ export default function Home() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Pizza className="h-8 w-8 text-red-600 mr-2" />
-              <h1 className="text-2xl font-bold text-gray-900">7KDelivery</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">7KDelivery</h1>
             </div>
             
-            <div className="flex items-center space-x-4">
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-4">
               {user ? (
                 <div className="flex items-center space-x-2">
                   <Button
@@ -796,7 +798,7 @@ export default function Home() {
                           placeholder="(11) 99999-9999"
                         />
                       </div>
-                      <Button onClick={handleLogin} className="w-full">
+                      <Button onClick={handleLogin} className="w-full h-11">
                         Entrar ou Cadastrar
                       </Button>
                     </div>
@@ -806,11 +808,11 @@ export default function Home() {
               
               <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="relative">
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    Carrinho
+                  <Button variant="outline" className="relative h-11 w-11 md:h-auto md:w-auto p-2 md:p-2">
+                    <ShoppingCart className="h-5 w-5 md:mr-2" />
+                    <span className="hidden md:inline">Carrinho</span>
                     {cart.length > 0 && (
-                      <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0">
+                      <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center">
                         {cart.reduce((total, item) => total + item.quantity, 0)}
                       </Badge>
                     )}
@@ -836,6 +838,7 @@ export default function Home() {
                             <Button
                               variant="outline"
                               size="sm"
+                              className="h-9 w-9"
                               onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                             >
                               -
@@ -844,16 +847,10 @@ export default function Home() {
                             <Button
                               variant="outline"
                               size="sm"
+                              className="h-9 w-9"
                               onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                             >
                               +
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => removeFromCart(item.productId)}
-                            >
-                              ×
                             </Button>
                           </div>
                         </div>
@@ -863,7 +860,7 @@ export default function Home() {
                           <span>Total:</span>
                           <span>R$ {getTotalAmount().toFixed(2)}</span>
                         </div>
-                        <Button onClick={() => setIsCheckoutOpen(true)} className="w-full mt-4">
+                        <Button onClick={() => setIsCheckoutOpen(true)} className="w-full mt-4 h-11">
                           Finalizar Pedido
                         </Button>
                       </div>
@@ -872,6 +869,144 @@ export default function Home() {
                 </DialogContent>
               </Dialog>
             </div>
+
+            {/* Mobile Navigation */}
+            <div className="md:hidden flex items-center">
+              <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative h-11 w-11">
+                    <ShoppingCart className="h-6 w-6" />
+                    {cart.length > 0 && (
+                      <Badge className="absolute top-1 right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
+                        {cart.reduce((total, item) => total + item.quantity, 0)}
+                      </Badge>
+                    )}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Seu Carrinho</DialogTitle>
+                  </DialogHeader>
+                  {cart.length === 0 ? (
+                    <p className="text-center text-gray-500">Seu carrinho está vazio</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {cart.map((item) => (
+                        <div key={item.productId} className="flex justify-between items-center">
+                          <div className="flex-1">
+                            <h4 className="font-medium">{item.product.name}</h4>
+                            <p className="text-sm text-gray-500">
+                              R$ {item.product.price.toFixed(2)} × {item.quantity}
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-9 w-9"
+                              onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                            >
+                              -
+                            </Button>
+                            <span>{item.quantity}</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                               className="h-9 w-9"
+                              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                            >
+                              +
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="border-t pt-4">
+                        <div className="flex justify-between font-medium">
+                          <span>Total:</span>
+                          <span>R$ {getTotalAmount().toFixed(2)}</span>
+                        </div>
+                        <Button onClick={() => setIsCheckoutOpen(true)} className="w-full mt-4 h-11">
+                          Finalizar Pedido
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-11 w-11">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent>
+                  <div className="flex flex-col space-y-4 pt-8">
+                    {user ? (
+                      <>
+                        <span className="text-lg font-medium text-center">Olá, {user.name}</span>
+                        <Button
+                          variant="outline"
+                          onClick={() => router.push('/orders')}
+                          className="h-11"
+                        >
+                          Meus Pedidos
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setUser(null);
+                            document.cookie = 'customer-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                          }}
+                          className="h-11"
+                        >
+                          Sair
+                        </Button>
+                      </>
+                    ) : (
+                       <Dialog open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" className="h-11">
+                            <User className="h-4 w-4 mr-2" />
+                            Entrar ou Cadastrar
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Entrar ou Cadastrar</DialogTitle>
+                            <DialogDescription>
+                              Digite seu nome e número de WhatsApp para acessar sua conta
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <Label htmlFor="name-mobile">Seu Nome Completo</Label>
+                              <Input
+                                id="name-mobile"
+                                value={loginForm.name}
+                                onChange={(e) => setLoginForm({ ...loginForm, name: e.target.value })}
+                                placeholder="João Silva"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="whatsapp-mobile">Seu Número de WhatsApp</Label>
+                              <Input
+                                id="whatsapp-mobile"
+                                value={loginForm.whatsappNumber}
+                                onChange={(e) => setLoginForm({ ...loginForm, whatsappNumber: e.target.value })}
+                                placeholder="(11) 99999-9999"
+                              />
+                            </div>
+                            <Button onClick={handleLogin} className="w-full h-11">
+                              Entrar ou Cadastrar
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
       </header>
@@ -879,11 +1014,11 @@ export default function Home() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}
-        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg p-8 mb-8">
+        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg p-6 md:p-8 mb-8">
           <div className="text-center">
-            <h2 className="text-4xl font-bold mb-4">Bem-vindo à 7KDelivery</h2>
-            <p className="text-xl mb-6">As melhores pizzas da cidade, entregues na sua porta</p>
-            <div className="flex justify-center space-x-8 text-sm">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Bem-vindo à 7KDelivery</h2>
+            <p className="text-lg md:text-xl mb-6">As melhores pizzas da cidade, na sua porta</p>
+            <div className="flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-8 text-sm">
               <div className="flex items-center">
                 <Clock className="h-5 w-5 mr-2" />
                 <span>Entrega rápida</span>
@@ -905,7 +1040,7 @@ export default function Home() {
           {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
             <div key={category}>
               <h2 className="text-2xl font-bold mb-4">{category}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {categoryProducts.map((product) => (
                   <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                     {product.imageUrl && (
@@ -913,6 +1048,7 @@ export default function Home() {
                         src={product.imageUrl}
                         alt={product.name}
                         className="w-full h-48 object-cover"
+                        loading="lazy"
                       />
                     )}
                     <CardHeader>
@@ -929,7 +1065,7 @@ export default function Home() {
                     <CardContent>
                       <Button
                         onClick={() => addToCart(product)}
-                        className="w-full"
+                        className="w-full h-11"
                         disabled={!product.available}
                       >
                         <ShoppingCart className="h-4 w-4 mr-2" />
@@ -1001,7 +1137,7 @@ export default function Home() {
                           variant={selectedAddress === address.id ? "default" : "outline"}
                           size="sm"
                           onClick={() => handleAddressChange(address.id)}
-                          className="text-xs"
+                          className="text-xs h-9"
                         >
                           {selectedAddress === address.id ? "Selecionado" : "Selecionar"}
                         </Button>
@@ -1009,7 +1145,7 @@ export default function Home() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleRemoveAddress(address.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 h-8 w-8"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 h-9 w-9"
                           title="Remover endereço"
                         >
                           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1032,7 +1168,7 @@ export default function Home() {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsAddAddressOpen(true)}
-                  className="w-full"
+                  className="w-full h-11"
                 >
                   <MapPin className="h-4 w-4 mr-2" />
                   Adicionar Novo Endereço
@@ -1101,7 +1237,7 @@ export default function Home() {
             <div>
               <Label>Forma de Pagamento</Label>
               <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Selecione a forma de pagamento" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1141,7 +1277,7 @@ export default function Home() {
               </div>
               <Button 
                 onClick={handleCheckout} 
-                className="w-full mt-4"
+                className="w-full mt-4 h-11"
                 disabled={
                   (deliveryType === 'DELIVERY' && (isCalculatingDelivery || deliveryFee === null || !selectedAddress)) ||
                   (deliveryType === 'PICKUP' && !paymentMethod)
@@ -1241,7 +1377,7 @@ export default function Home() {
             {/* Manual Address Form */}
             <div className="space-y-4">
               <h4 className="font-medium text-gray-900">Detalhes do Endereço</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <Label htmlFor="street">Rua *</Label>
                   <Input
@@ -1296,7 +1432,7 @@ export default function Home() {
 
             <Button 
               onClick={handleAddAddress} 
-              className="w-full"
+              className="w-full h-11"
               disabled={!newAddress.street || !newAddress.number || !newAddress.neighborhood || !newAddress.city}
             >
               <MapPin className="h-4 w-4 mr-2" />
