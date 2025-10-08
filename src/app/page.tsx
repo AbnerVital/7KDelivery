@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Pizza, ShoppingCart, User, MapPin, Clock, Phone, Navigation, Search, Loader2, Menu } from 'lucide-react';
 import GoogleMapsAutocomplete from '@/components/ui/google-maps-autocomplete';
 import Map from '@/components/ui/map';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 interface Product {
   id: string;
@@ -126,13 +126,22 @@ export default function Home() {
     const loadProducts = async () => {
       try {
         const response = await fetch('/api/products');
-        const data = await response.json();
-        // FIX: Ensure setProducts always receives an array
-        setProducts(data.products || []);
+        if (response.ok) {
+            const data = await response.json();
+            setProducts(data.products || []);
+        } else {
+            toast({
+              title: 'Erro',
+              description: 'Não foi possível carregar o cardápio',
+              variant: 'destructive'
+            });
+            setProducts([]); // Define como array vazio em caso de erro
+        }
       } catch (error) {
+        setProducts([]); // Define como array vazio em caso de erro de rede
         toast({
-          title: 'Erro',
-          description: 'Não foi possível carregar o cardápio',
+          title: 'Erro de Rede',
+          description: 'Não foi possível conectar ao servidor para carregar o cardápio.',
           variant: 'destructive'
         });
       }
@@ -162,7 +171,6 @@ export default function Home() {
         const firstAddress = user.addresses[0];
         setSelectedAddress(firstAddress.id);
         
-        // If checkout is open, also calculate delivery fee
         if (isCheckoutOpen && deliveryFee === null && !isCalculatingDelivery) {
           await calculateDeliveryFee(firstAddress);
         }
@@ -218,12 +226,10 @@ export default function Home() {
     try {
       let addressWithCoords = { ...newAddress, lat: 0, lng: 0 };
       
-      // Use selected place coordinates if available
       if (selectedPlace && selectedPlace.coordinates) {
         addressWithCoords.lat = selectedPlace.coordinates.lat;
         addressWithCoords.lng = selectedPlace.coordinates.lng;
       } else {
-        // Otherwise, get coordinates for the address
         try {
           const response = await fetch('/api/geocode', {
             method: 'POST',
@@ -257,13 +263,9 @@ export default function Home() {
         } : null;
         setUser(updatedUser);
         
-        // Auto-select the newly added address
         setSelectedAddress(data.address.id);
-        
-        // Calculate delivery fee for the new address
         await calculateDeliveryFee(data.address);
         
-        // Reset states
         setNewAddress({
           street: '',
           number: '',
@@ -336,7 +338,6 @@ export default function Home() {
     return cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
   };
 
-  // Function to get current location
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
       toast({
@@ -353,7 +354,6 @@ export default function Home() {
         try {
           const { latitude, longitude } = position.coords;
           
-          // Reverse geocoding to get address from coordinates
           const response = await fetch('/api/geocode', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -365,7 +365,6 @@ export default function Home() {
           if (response.ok) {
             const data = await response.json();
             
-            // Create a place details object
             const placeDetails: PlaceDetails = {
               place_id: 'current_location',
               formatted_address: data.address,
@@ -383,7 +382,6 @@ export default function Home() {
             
             setSelectedPlace(placeDetails);
             
-            // Update new address form with address components if available
             if (data.addressComponents) {
               const getComponent = (type: string) => {
                 const component = data.addressComponents.find((comp: any) => comp.types.includes(type));
@@ -430,11 +428,9 @@ export default function Home() {
     );
   };
 
-  // Function to handle address selection from Google Maps
   const handleAddressSelect = async (placeDetails: PlaceDetails) => {
     setSelectedPlace(placeDetails);
     
-    // Update the new address form with the selected place details
     setNewAddress({
       street: placeDetails.address.street,
       number: placeDetails.address.number,
@@ -443,48 +439,20 @@ export default function Home() {
       zipCode: placeDetails.address.zipCode
     });
     
-    // Show map if coordinates are available
     if (placeDetails.coordinates) {
       setShowMap(true);
     }
   };
 
-  // Function to search for address suggestions (legacy, kept for compatibility)
-  const searchAddress = async (query: string) => {
-    if (!query.trim()) {
-      setAddressSuggestions([]);
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/places/autocomplete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input: query })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAddressSuggestions(data.suggestions || []);
-      }
-    } catch (error) {
-      console.error('Address search error:', error);
-    }
-  };
-
-  // Function to calculate delivery fee
   const calculateDeliveryFee = async (addressData: any) => {
     let coordinates = addressData.coordinates || null;
     
-    // If we have a selected place, use its coordinates
     if (selectedPlace && selectedPlace.coordinates) {
       coordinates = selectedPlace.coordinates;
     }
     
-    // If no coordinates, try to get them
     if (!coordinates) {
       if (!addressData.lat || !addressData.lng) {
-        // Get coordinates for the address
         try {
           const response = await fetch('/api/geocode', {
             method: 'POST',
@@ -560,7 +528,6 @@ export default function Home() {
     }
   };
 
-  // Handle address selection change
   const handleAddressChange = async (addressId: string) => {
     setSelectedAddress(addressId);
     
@@ -580,7 +547,6 @@ export default function Home() {
     const address = user.addresses.find(addr => addr.id === addressId);
     if (!address) return;
 
-    // Show confirmation dialog
     if (confirm(`Tem certeza de que deseja remover o endereço:\n${address.street}, ${address.number} - ${address.neighborhood}?`)) {
       try {
         const response = await fetch(`/api/addresses/${addressId}`, {
@@ -588,14 +554,12 @@ export default function Home() {
         });
 
         if (response.ok) {
-          // Update user state by removing the address
           const updatedUser = {
             ...user,
             addresses: user.addresses.filter(addr => addr.id !== addressId)
           };
           setUser(updatedUser);
 
-          // If the removed address was selected, clear selection and delivery fee
           if (selectedAddress === addressId) {
             setSelectedAddress('');
             setDeliveryFee(null);
@@ -630,34 +594,21 @@ export default function Home() {
     }
 
     if (cart.length === 0) {
-      toast({
-        title: 'Erro',
-        description: 'Seu carrinho está vazio',
-        variant: 'destructive'
-      });
+      toast({ title: 'Erro', description: 'Seu carrinho está vazio', variant: 'destructive' });
       return;
     }
 
     if (deliveryType === 'DELIVERY' && !selectedAddress) {
-      toast({
-        title: 'Endereço necessário',
-        description: 'Por favor, adicione e selecione um endereço de entrega',
-        variant: 'destructive'
-      });
+      toast({ title: 'Endereço necessário', description: 'Por favor, adicione e selecione um endereço de entrega', variant: 'destructive' });
       return;
     }
 
     if (!paymentMethod) {
-      toast({
-        title: 'Forma de pagamento',
-        description: 'Selecione uma forma de pagamento',
-        variant: 'destructive'
-      });
+      toast({ title: 'Forma de pagamento', description: 'Selecione uma forma de pagamento', variant: 'destructive' });
       return;
     }
 
     try {
-      // FIX: Explicitly type deliveryAddress
       let deliveryAddress: Address | null = null;
       let calculatedDeliveryFee = 0;
 
@@ -695,7 +646,6 @@ export default function Home() {
           title: 'Pedido realizado',
           description: `Seu pedido #${data.order.id} foi realizado com sucesso!`
         });
-        // Redirect to orders page to track the order
         setTimeout(() => {
           router.push('/orders');
         }, 1500);
@@ -716,7 +666,6 @@ export default function Home() {
     }
   };
   
-  // FIX: Ensure products is an array before calling reduce
   const groupedProducts = (products || []).reduce((acc, product) => {
     if (!acc[product.category]) {
       acc[product.category] = [];
@@ -735,7 +684,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -744,7 +692,6 @@ export default function Home() {
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900">7KDelivery</h1>
             </div>
             
-            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-4">
               {user ? (
                 <div className="flex items-center space-x-2">
@@ -943,6 +890,10 @@ export default function Home() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent>
+                    <SheetHeader>
+                        <SheetTitle className="sr-only">Menu</SheetTitle>
+                        <SheetDescription className="sr-only">Opções de navegação e usuário</SheetDescription>
+                    </SheetHeader>
                   <div className="flex flex-col space-y-4 pt-8">
                     {user ? (
                       <>
@@ -1090,7 +1041,6 @@ export default function Home() {
             <DialogTitle>Finalizar Pedido</DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
-            {/* Delivery Type Selection */}
             <div>
               <Label>Tipo de Retirada</Label>
               <div className="grid grid-cols-2 gap-4 mt-2">
@@ -1115,12 +1065,10 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Address Selection - Only show for DELIVERY type */}
             {deliveryType === 'DELIVERY' && (
               <div>
                 <Label>Endereço de Entrega</Label>
               <div className="space-y-3">
-                {/* Address List with Remove Option */}
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {user?.addresses.map((address) => (
                     <div key={address.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
@@ -1166,7 +1114,6 @@ export default function Home() {
                   </p>
                 )}
                 
-                {/* Add Address Button */}
                 <Button
                   variant="outline"
                   size="sm"
@@ -1180,7 +1127,6 @@ export default function Home() {
             </div>
             )}
 
-            {/* Pickup Info - Only show for PICKUP type */}
             {deliveryType === 'PICKUP' && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex items-center space-x-3">
@@ -1195,7 +1141,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Delivery Fee Display - Only show for DELIVERY type */}
             {deliveryType === 'DELIVERY' && (
               <>
                 {isCalculatingDelivery && (
@@ -1221,7 +1166,6 @@ export default function Home() {
               </>
             )}
 
-            {/* Pickup Fee Display - Only show for PICKUP type */}
             {deliveryType === 'PICKUP' && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
@@ -1236,7 +1180,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Payment Method */}
             <div>
               <Label>Forma de Pagamento</Label>
               <Select value={paymentMethod} onValueChange={setPaymentMethod}>
@@ -1251,7 +1194,6 @@ export default function Home() {
               </Select>
             </div>
 
-            {/* Order Summary */}
             <div className="border-t pt-4 space-y-2">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
@@ -1300,7 +1242,6 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* Add Address Dialog */}
       <Dialog open={isAddAddressOpen} onOpenChange={(open) => {
         setIsAddAddressOpen(open);
         if (!open) {
@@ -1323,7 +1264,6 @@ export default function Home() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6">
-            {/* Google Maps Autocomplete */}
             <div>
               <Label>Buscar Endereço</Label>
               <GoogleMapsAutocomplete
@@ -1338,7 +1278,6 @@ export default function Home() {
               />
             </div>
 
-            {/* Map Visualization */}
             {showMap && selectedPlace && selectedPlace.coordinates && (
               <div>
                 <Label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -1357,7 +1296,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Selected Address Display */}
             {selectedPlace && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-start space-x-3">
@@ -1377,7 +1315,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Manual Address Form */}
             <div className="space-y-4">
               <h4 className="font-medium text-gray-900">Detalhes do Endereço</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
